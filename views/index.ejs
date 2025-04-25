@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>某人要发匿名邮件</h1>
+      <p>凑合着用吧，暂时不能发附件，想发附件得在我笔记本上操作</p>
+    </header>
+
+    <main>
+      <form id="emailForm" enctype="multipart/form-data">
+        <div class="form-group">
+          <label for="from">发件人邮箱</label>
+          <div class="email-input-container">
+            <input type="text" id="prefix" name="prefix" placeholder="前缀" required>
+            <button type="button" id="randomPrefix" class="random-btn">随机生成</button>
+            <span class="at-symbol">@</span>
+            <select id="domain" name="domain" required>
+              <% domains.forEach(domain => { %>
+                <option value="<%= domain %>"><%= domain %></option>
+              <% }); %>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="to">收件人邮箱</label>
+          <input type="email" id="to" name="to" placeholder="recipient@example.com" required>
+        </div>
+
+        <div class="form-group">
+          <label for="subject">邮件主题</label>
+          <div class="input-with-button">
+            <input type="text" id="subject" name="subject" placeholder="请输入邮件主题" required>
+            <button type="button" id="randomSubject" class="random-btn">随机生成</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="content">邮件内容</label>
+          <div class="textarea-with-button">
+            <textarea id="content" name="content" placeholder="请输入邮件内容" rows="6" required></textarea>
+            <button type="button" id="randomContent" class="random-btn">随机生成</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="attachments">附件 (最多5个)</label>
+          <div class="file-upload-container">
+            <input type="file" id="attachments" name="attachments" multiple>
+            <div class="file-upload-btn">
+              <span>选择文件</span>
+            </div>
+            <div id="fileList" class="file-list"></div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" id="sendButton">发送邮件</button>
+        </div>
+      </form>
+
+      <div id="resultContainer" class="result-container hidden">
+        <div id="result" class="result"></div>
+        <button id="closeResultBtn">关闭</button>
+      </div>
+    </main>
+
+    <footer>
+      <p>&copy; <%= new Date().getFullYear() %> AdamWorks</p>
+    </footer>
+  </div>
+
+  <script src="/js/script.js"></script>
+</body>
+</html> 
