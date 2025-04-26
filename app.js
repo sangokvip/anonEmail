@@ -4,11 +4,17 @@ const path = require('path');
 const { Resend } = require('resend');
 const fs = require('fs');
 const { S3Client, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
+const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
 
 // 初始化Express应用
 const app = express();
 const port = process.env.PORT || 3000;
+
+// 初始化Supabase客户端
+const supabaseUrl = 'https://caijezjlnraciswancet.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNhaWplempsbnJhY2lzd2FuY2V0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU2NDIzMTAsImV4cCI6MjA2MTIxODMxMH0.JOqsVp_Ueg9_YXNrr2kPSDSJ5LqA42qg4-AlxgEG_xk';
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 // 初始化S3客户端
 const s3Client = new S3Client({
@@ -47,6 +53,26 @@ app.get('/', (req, res) => {
     title: '自定义邮件发送',
     domains: ['soeasy.mom']
   });
+});
+
+// 管理员后台路由
+app.get('/admin', async (req, res) => {
+  try {
+    const { data: emails, error } = await supabase
+      .from('email_records')
+      .select('*')
+      .order('sent_at', { ascending: false });
+
+    if (error) throw error;
+
+    res.render('admin', {
+      title: '邮件管理后台',
+      emails: emails
+    });
+  } catch (error) {
+    console.error('获取邮件记录失败:', error);
+    res.status(500).json({ error: '获取邮件记录失败' });
+  }
 });
 
 app.post('/send-email', upload.array('attachments', 5), async (req, res) => {
@@ -90,11 +116,50 @@ app.post('/send-email', upload.array('attachments', 5), async (req, res) => {
         attachments: attachments.length > 0 ? attachments : undefined
       });
 
+      // 记录到数据库
+      const { error: dbError } = await supabase
+        .from('email_records')
+        .insert([
+          {
+            from_email: from,
+            to_email: to,
+            subject,
+            content,
+            attachments: attachments.length > 0 ? attachments.map(a => a.filename) : null,
+            status: 'success',
+            error_message: null
+          }
+        ]);
+
+      if (dbError) {
+        console.error('数据库记录失败:', dbError);
+      }
+
       res.status(200).json({ success: true, data });
     } catch (error) {
       console.error('Resend API错误:', error);
       // 删除已上传的S3文件
       await cleanupS3Files(uploadedFiles);
+
+      // 记录失败到数据库
+      const { error: dbError } = await supabase
+        .from('email_records')
+        .insert([
+          {
+            from_email: from,
+            to_email: to,
+            subject,
+            content,
+            attachments: null,
+            status: 'failed',
+            error_message: error.message
+          }
+        ]);
+
+      if (dbError) {
+        console.error('数据库记录失败:', dbError);
+      }
+
       throw new Error(`邮件发送失败: ${error.message}`);
     }
   } catch (error) {

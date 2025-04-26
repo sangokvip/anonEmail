@@ -6,12 +6,18 @@
   <title><%= title %></title>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap">
+  <style>
+    .title {
+      cursor: pointer;
+      user-select: none;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
     <header>
-      <h1>某人要发匿名邮件</h1>
-      <p>凑合着用吧，暂时不能发附件，想发附件得在我笔记本上操作</p>
+      <h1 class="title" ondblclick="goToAdmin()">某人要发匿名邮件</h1>
+      <p>向狗鸡巴致敬！！！🫡🫡🫡</p>
     </header>
 
     <main>
@@ -79,5 +85,10 @@
   </div>
 
   <script src="/js/script.js"></script>
+  <script>
+    function goToAdmin() {
+      window.location.href = '/admin';
+    }
+  </script>
 </body>
 </html> 
