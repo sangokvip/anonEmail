@@ -75,6 +75,26 @@ app.get('/admin', async (req, res) => {
   }
 });
 
+// API: 获取单个邮件详情
+app.get('/api/emails/:id', async (req, res) => {
+  try {
+    const emailId = req.params.id;
+    const email = await supabase
+      .from('email_records')
+      .select('*')
+      .eq('id', emailId);
+    
+    if (email.length === 0) {
+      return res.status(404).json({ error: '未找到邮件' });
+    }
+    
+    res.json(email[0]);
+  } catch (error) {
+    console.error('获取邮件详情失败:', error);
+    res.status(500).json({ error: '服务器错误' });
+  }
+});
+
 app.post('/send-email', upload.array('attachments', 5), async (req, res) => {
   const uploadedFiles = [];
   try {

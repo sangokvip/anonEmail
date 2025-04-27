@@ -364,7 +364,7 @@
         <h1 class="admin-title">邮件管理后台</h1>
         <p class="admin-subtitle">查看所有发送的邮件记录</p>
       </div>
-      <button class="logout-btn" onclick="logout()">
+      <button class="btn btn-destructive btn-with-icon" onclick="logout()">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
           <polyline points="16 17 21 12 16 7"></polyline>
@@ -408,7 +408,7 @@
                   </span>
                 </td>
                 <td>
-                  <span class="view-details" onclick="showDetails(`<%= JSON.stringify(email).replace(/`/g, '\\`') %>`)">
+                  <span class="view-details btn btn-ghost btn-sm btn-with-icon" onclick="showDetails('<%= email.id %>')">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                       <circle cx="12" cy="12" r="10"/>
                       <line x1="12" y1="16" x2="12" y2="12"/>
@@ -491,7 +491,7 @@
       <p>请输入管理员密码</p>
       <input type="password" id="adminPassword" class="password-input" placeholder="请输入密码">
       <div id="passwordError" class="error-message">密码错误，请重试</div>
-      <button onclick="verifyPassword()" class="password-submit">确认</button>
+      <button onclick="verifyPassword()" class="btn btn-primary">确认</button>
     </div>
   </div>
 
@@ -537,28 +537,36 @@
       window.location.href = '/';
     }
 
-    function showDetails(emailJson) {
-      const email = JSON.parse(emailJson);
-      const modal = document.getElementById('emailModal');
-      
-      document.getElementById('modalSentAt').textContent = new Date(email.sent_at).toLocaleString('zh-CN');
-      document.getElementById('modalFrom').textContent = email.from_email;
-      document.getElementById('modalTo').textContent = email.to_email;
-      document.getElementById('modalSubject').textContent = email.subject;
-      document.getElementById('modalContent').textContent = email.content;
-      document.getElementById('modalAttachments').textContent = email.attachments ? email.attachments.join(', ') : '无附件';
-      document.getElementById('modalStatus').textContent = email.status === 'success' ? '发送成功' : '发送失败';
-      
-      const errorGroup = document.getElementById('errorGroup');
-      if (email.error_message) {
-        errorGroup.style.display = 'block';
-        document.getElementById('modalError').textContent = email.error_message;
-      } else {
-        errorGroup.style.display = 'none';
-      }
-      
-      modal.style.display = 'block';
-      setTimeout(() => modal.classList.add('show'), 10);
+    function showDetails(emailId) {
+      // 通过AJAX获取邮件详情
+      fetch(`/api/emails/${emailId}`)
+        .then(response => response.json())
+        .then(email => {
+          const modal = document.getElementById('emailModal');
+          
+          document.getElementById('modalSentAt').textContent = new Date(email.sent_at).toLocaleString('zh-CN');
+          document.getElementById('modalFrom').textContent = email.from_email;
+          document.getElementById('modalTo').textContent = email.to_email;
+          document.getElementById('modalSubject').textContent = email.subject;
+          document.getElementById('modalContent').textContent = email.content;
+          document.getElementById('modalAttachments').textContent = email.attachments ? email.attachments.join(', ') : '无附件';
+          document.getElementById('modalStatus').textContent = email.status === 'success' ? '发送成功' : '发送失败';
+          
+          const errorGroup = document.getElementById('errorGroup');
+          if (email.error_message) {
+            errorGroup.style.display = 'block';
+            document.getElementById('modalError').textContent = email.error_message;
+          } else {
+            errorGroup.style.display = 'none';
+          }
+          
+          modal.style.display = 'block';
+          setTimeout(() => modal.classList.add('show'), 10);
+        })
+        .catch(error => {
+          console.error('获取邮件详情失败:', error);
+          alert('获取邮件详情失败，请稍后再试');
+        });
     }
 
     function closeModal() {

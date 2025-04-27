@@ -26,7 +26,7 @@
           <label for="from">发件人邮箱</label>
           <div class="email-input-container">
             <input type="text" id="prefix" name="prefix" placeholder="前缀" required>
-            <button type="button" id="randomPrefix" class="random-btn">随机生成</button>
+            <button type="button" id="randomPrefix" class="btn btn-secondary btn-sm">随机生成</button>
             <span class="at-symbol">@</span>
             <select id="domain" name="domain" required>
               <% domains.forEach(domain => { %>
@@ -45,7 +45,7 @@
           <label for="subject">邮件主题</label>
           <div class="input-with-button">
             <input type="text" id="subject" name="subject" placeholder="请输入邮件主题" required>
-            <button type="button" id="randomSubject" class="random-btn">随机生成</button>
+            <button type="button" id="randomSubject" class="btn btn-secondary btn-sm">随机生成</button>
           </div>
         </div>
 
@@ -53,7 +53,7 @@
           <label for="content">邮件内容</label>
           <div class="textarea-with-button">
             <textarea id="content" name="content" placeholder="请输入邮件内容" rows="6" required></textarea>
-            <button type="button" id="randomContent" class="random-btn">随机生成</button>
+            <button type="button" id="randomContent" class="btn btn-secondary btn-sm">随机生成</button>
           </div>
         </div>
 
@@ -61,7 +61,7 @@
           <label for="attachments">附件 (最多5个)</label>
           <div class="file-upload-container">
             <input type="file" id="attachments" name="attachments" multiple>
-            <div class="file-upload-btn">
+            <div class="file-upload-btn btn btn-outline">
               <span>选择文件</span>
             </div>
             <div id="fileList" class="file-list"></div>
@@ -69,13 +69,13 @@
         </div>
 
         <div class="form-actions">
-          <button type="submit" id="sendButton">发送邮件</button>
+          <button type="submit" id="sendButton" class="btn btn-primary btn-lg">发送邮件</button>
         </div>
       </form>
 
       <div id="resultContainer" class="result-container hidden">
         <div id="result" class="result"></div>
-        <button id="closeResultBtn">关闭</button>
+        <button id="closeResultBtn" class="btn btn-outline">关闭</button>
       </div>
     </main>
 
