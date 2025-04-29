@@ -46,12 +46,13 @@ const upload = multer({
 
 // 初始化Resend客户端
 const resend = new Resend(process.env.RESEND_API_KEY);
+const resendFuckme = new Resend('re_RZToPZts_4P62dHLWbvNmtWLc5fQMBvsm');
 
 // 路由
 app.get('/', (req, res) => {
   res.render('index', {
     title: '自定义邮件发送',
-    domains: ['soeasy.mom']
+    domains: ['soeasy.mom', 'fuckme.store']
   });
 });
 
@@ -102,6 +103,9 @@ app.post('/send-email', upload.array('attachments', 5), async (req, res) => {
     const from = `${prefix}@${domain}`;
     const files = req.files || [];
     
+    // 选择正确的Resend客户端
+    const selectedResend = domain === 'fuckme.store' ? resendFuckme : resend;
+    
     // 上传文件到S3
     const attachments = await Promise.all(files.map(async (file) => {
       try {
@@ -128,7 +132,7 @@ app.post('/send-email', upload.array('attachments', 5), async (req, res) => {
 
     // 发送邮件
     try {
-      const data = await resend.emails.send({
+      const data = await selectedResend.emails.send({
         from: `${prefix} <${from}>`,
         to: [to],
         subject,
