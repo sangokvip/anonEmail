@@ -67,98 +67,88 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('content').value = generateRandomWords(10); // 生成10个词组成内容
   });
 
-  // 处理文件选择
-  fileInput.addEventListener('change', () => {
+  // 文件上传处理
+  fileInput.addEventListener('change', function(e) {
     fileList.innerHTML = '';
-    const files = Array.from(fileInput.files);
-
-    if (files.length > 0) {
-      files.forEach(file => {
-        const fileItem = document.createElement('div');
-        fileItem.className = 'file-item';
-        
-        const fileName = document.createElement('span');
-        fileName.textContent = `${file.name} (${formatFileSize(file.size)})`;
-        
-        const removeBtn = document.createElement('button');
-        removeBtn.innerHTML = '&times;';
-        removeBtn.title = '移除附件';
-        
-        removeBtn.addEventListener('click', () => {
-          fileItem.remove();
-          if (fileList.children.length === 0) {
-            alert('附件已全部移除，您需要重新选择文件。');
-            fileInput.value = '';
-          }
-        });
-        
-        fileItem.appendChild(fileName);
-        fileItem.appendChild(removeBtn);
-        fileList.appendChild(fileItem);
-      });
+    const files = Array.from(e.target.files);
+    const maxFiles = 5;
+    
+    if (files.length > maxFiles) {
+      alert(`最多只能上传 ${maxFiles} 个文件`);
+      fileInput.value = '';
+      return;
     }
+    
+    files.forEach(file => {
+      const fileSize = (file.size / 1024 / 1024).toFixed(2);
+      if (fileSize > 10) {
+        alert(`文件 ${file.name} 超过10MB限制`);
+        return;
+      }
+      
+      const fileItem = document.createElement('div');
+      fileItem.className = 'file-item';
+      fileItem.innerHTML = `
+        <span>${file.name} (${fileSize}MB)</span>
+        <button type="button" class="btn btn-ghost btn-sm btn-with-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      `;
+      
+      const removeButton = fileItem.querySelector('button');
+      removeButton.onclick = function() {
+        fileItem.remove();
+        // 由于无法直接修改 FileList，我们需要清空 input
+        fileInput.value = '';
+      };
+      
+      fileList.appendChild(fileItem);
+    });
   });
 
-  // 提交表单
-  emailForm.addEventListener('submit', async (e) => {
+  // 处理表单提交
+  emailForm.addEventListener('submit', async function(e) {
     e.preventDefault();
-    
+    sendButton.disabled = true;
+    sendButton.classList.add('btn-loading');
+
+    const formData = new FormData(emailForm);
+
     try {
-      sendButton.disabled = true;
-      sendButton.textContent = '发送中...';
-      
-      const formData = new FormData(emailForm);
-      
       const response = await fetch('/send-email', {
         method: 'POST',
         body: formData
       });
-      
+
       const data = await response.json();
-      
+
       if (data.success) {
+        result.textContent = '邮件发送成功！';
         result.className = 'result success';
-        result.innerHTML = `
-          <h3>邮件发送成功！</h3>
-          <p>邮件已从 ${formData.get('prefix')}@${formData.get('domain')} 发送至 ${formData.get('to')}</p>
-        `;
-        // 清空表单
         emailForm.reset();
         fileList.innerHTML = '';
       } else {
-        result.className = 'result error';
-        result.innerHTML = `
-          <h3>邮件发送失败</h3>
-          <p>错误信息: ${data.error}</p>
-        `;
+        throw new Error(data.error || '发送失败');
       }
     } catch (error) {
-      console.error('发送错误:', error);
-      result.className = 'result error';
-      let errorMessage = '发送过程中出错';
-      
-      try {
-        const errorData = await error.response?.json();
-        if (errorData && errorData.error) {
-          errorMessage = errorData.error;
-        }
-      } catch (e) {
-        errorMessage = error.message || '发送过程中出错';
+      console.error('发送错误详情:', error);
+      result.textContent = `发送失败: ${error.message}`;
+      if (error.response) {
+        result.textContent += `\n详细信息: ${JSON.stringify(error.response)}`;
       }
-      
-      result.innerHTML = `
-        <h3>发送失败</h3>
-        <p>错误信息: ${errorMessage}</p>
-      `;
+      result.className = 'result error';
     } finally {
-      resultContainer.classList.remove('hidden');
       sendButton.disabled = false;
-      sendButton.textContent = '发送邮件';
+      sendButton.classList.remove('btn-loading');
+      resultContainer.classList.remove('hidden');
     }
   });
 
   // 关闭结果提示
-  closeResultBtn.addEventListener('click', () => {
+  closeResultBtn.addEventListener('click', function() {
     resultContainer.classList.add('hidden');
   });
 

@@ -132,6 +132,14 @@ app.post('/send-email', upload.array('attachments', 5), async (req, res) => {
 
     // 发送邮件
     try {
+      console.log('准备发送邮件:', {
+        from: `${prefix} <${from}>`,
+        to: [to],
+        subject,
+        domain,
+        usingFuckmeAPI: domain === 'fuckme.store'
+      });
+
       const data = await selectedResend.emails.send({
         from: `${prefix} <${from}>`,
         to: [to],
@@ -139,6 +147,8 @@ app.post('/send-email', upload.array('attachments', 5), async (req, res) => {
         html: content,
         attachments: attachments.length > 0 ? attachments : undefined
       });
+
+      console.log('Resend API 响应:', data);
 
       // 记录到数据库
       const { error: dbError } = await supabase
@@ -161,7 +171,14 @@ app.post('/send-email', upload.array('attachments', 5), async (req, res) => {
 
       res.status(200).json({ success: true, data });
     } catch (error) {
-      console.error('Resend API错误:', error);
+      console.error('Resend API详细错误:', {
+        error: error.message,
+        code: error.statusCode,
+        details: error.response?.body,
+        domain,
+        from,
+        to
+      });
       // 删除已上传的S3文件
       await cleanupS3Files(uploadedFiles);
 
