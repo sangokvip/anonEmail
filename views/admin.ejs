@@ -538,17 +538,34 @@
     }
 
     function showDetails(emailId) {
+      const modal = document.getElementById('emailModal');
+      
+      // 显示加载状态
+      document.getElementById('modalContent').textContent = '加载中...';
+      
+      // 先显示模态框
+      modal.style.display = 'block';
+      modal.classList.add('show');
+      
       // 通过AJAX获取邮件详情
       fetch(`/api/emails/${emailId}`)
-        .then(response => response.json())
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(response.statusText);
+          }
+          return response.json();
+        })
         .then(email => {
-          const modal = document.getElementById('emailModal');
+          if (!email) {
+            throw new Error('未找到邮件数据');
+          }
           
-          document.getElementById('modalSentAt').textContent = new Date(email.sent_at).toLocaleString('zh-CN');
-          document.getElementById('modalFrom').textContent = email.from_email;
-          document.getElementById('modalTo').textContent = email.to_email;
-          document.getElementById('modalSubject').textContent = email.subject;
-          document.getElementById('modalContent').textContent = email.content;
+          // 更新模态框内容
+          document.getElementById('modalSentAt').textContent = email.sent_at || '未知时间';
+          document.getElementById('modalFrom').textContent = email.from_email || '未知';
+          document.getElementById('modalTo').textContent = email.to_email || '未知';
+          document.getElementById('modalSubject').textContent = email.subject || '无主题';
+          document.getElementById('modalContent').textContent = email.content || '无内容';
           document.getElementById('modalAttachments').textContent = email.attachments ? email.attachments.join(', ') : '无附件';
           document.getElementById('modalStatus').textContent = email.status === 'success' ? '发送成功' : '发送失败';
           
@@ -559,20 +576,22 @@
           } else {
             errorGroup.style.display = 'none';
           }
-          
-          modal.style.display = 'block';
-          setTimeout(() => modal.classList.add('show'), 10);
         })
         .catch(error => {
           console.error('获取邮件详情失败:', error);
-          alert('获取邮件详情失败，请稍后再试');
+          document.getElementById('modalContent').textContent = `获取邮件详情失败: ${error.message}`;
+          setTimeout(() => closeModal(), 2000);
         });
     }
 
     function closeModal() {
       const modal = document.getElementById('emailModal');
       modal.classList.remove('show');
-      setTimeout(() => modal.style.display = 'none', 300);
+      setTimeout(() => {
+        modal.style.display = 'none';
+        // 清空模态框内容
+        document.getElementById('modalContent').textContent = '';
+      }, 300);
     }
 
     // 点击模态框外部关闭
