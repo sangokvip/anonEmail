@@ -80,19 +80,34 @@ app.get('/admin', async (req, res) => {
 app.get('/api/emails/:id', async (req, res) => {
   try {
     const emailId = req.params.id;
-    const email = await supabase
+    const { data: email, error } = await supabase
       .from('email_records')
       .select('*')
-      .eq('id', emailId);
+      .eq('id', emailId)
+      .single();
     
-    if (email.length === 0) {
+    if (error) {
+      console.error('Supabase查询错误:', error);
+      throw error;
+    }
+    
+    if (!email) {
       return res.status(404).json({ error: '未找到邮件' });
     }
     
-    res.json(email[0]);
+    // 格式化发送时间
+    const formattedEmail = {
+      ...email,
+      sent_at: email.sent_at ? new Date(email.sent_at).toLocaleString('zh-CN') : '未知时间'
+    };
+    
+    res.json(formattedEmail);
   } catch (error) {
     console.error('获取邮件详情失败:', error);
-    res.status(500).json({ error: '服务器错误' });
+    res.status(500).json({ 
+      error: '获取邮件详情失败',
+      message: error.message 
+    });
   }
 });
 
