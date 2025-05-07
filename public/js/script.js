@@ -89,13 +89,19 @@ document.addEventListener('DOMContentLoaded', () => {
       const fileItem = document.createElement('div');
       fileItem.className = 'file-item';
       fileItem.innerHTML = `
-        <span>${file.name} (${fileSize}MB)</span>
-        <button type="button" class="btn btn-ghost btn-sm btn-with-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"/>
-            <line x1="6" y1="6" x2="18" y2="18"/>
-          </svg>
-        </button>
+        <div class="file-header">
+          <span>${file.name} (${fileSize}MB)</span>
+          <button type="button" class="btn btn-ghost btn-sm btn-with-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        <div class="progress-container" style="display: none;">
+          <div class="progress-bar" style="width: 0%"></div>
+          <span class="progress-text">0%</span>
+        </div>
       `;
       
       const removeButton = fileItem.querySelector('button');
@@ -110,41 +116,89 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // 处理表单提交
-  emailForm.addEventListener('submit', async function(e) {
+  emailForm.addEventListener('submit', function(e) {
     e.preventDefault();
     sendButton.disabled = true;
     sendButton.classList.add('btn-loading');
 
     const formData = new FormData(emailForm);
-
-    try {
-      const response = await fetch('/send-email', {
-        method: 'POST',
-        body: formData
+    const files = Array.from(fileInput.files || []);
+    
+    // 如果有文件，显示进度条
+    if (files.length > 0) {
+      const fileItems = fileList.querySelectorAll('.file-item');
+      fileItems.forEach(item => {
+        const progressContainer = item.querySelector('.progress-container');
+        if (progressContainer) {
+          progressContainer.style.display = 'flex';
+        }
       });
+    }
 
-      const data = await response.json();
-
-      if (data.success) {
-        result.textContent = '邮件发送成功！';
-        result.className = 'result success';
-        emailForm.reset();
-        fileList.innerHTML = '';
+    // 使用XMLHttpRequest来监听上传进度
+    const xhr = new XMLHttpRequest();
+    
+    // 监听上传进度
+    xhr.upload.addEventListener('progress', function(event) {
+      if (event.lengthComputable && files.length > 0) {
+        const percentComplete = (event.loaded / event.total) * 100;
+        const fileItems = fileList.querySelectorAll('.file-item');
+        
+        // 更新所有文件的进度条
+        fileItems.forEach(item => {
+          const progressBar = item.querySelector('.progress-bar');
+          const progressText = item.querySelector('.progress-text');
+          
+          if (progressBar && progressText) {
+            progressBar.style.width = `${percentComplete}%`;
+            progressText.textContent = `${Math.round(percentComplete)}%`;
+          }
+        });
+      }
+    });
+    
+    // 请求完成
+    xhr.addEventListener('load', function() {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          const data = JSON.parse(xhr.responseText);
+          
+          if (data.success) {
+            result.textContent = '邮件发送成功！';
+            result.className = 'result success';
+            emailForm.reset();
+            fileList.innerHTML = '';
+          } else {
+            throw new Error(data.error || '发送失败');
+          }
+        } catch (error) {
+          console.error('解析响应失败:', error);
+          result.textContent = `发送失败: ${error.message}`;
+          result.className = 'result error';
+        }
       } else {
-        throw new Error(data.error || '发送失败');
+        result.textContent = `发送失败: HTTP错误 ${xhr.status}`;
+        result.className = 'result error';
       }
-    } catch (error) {
-      console.error('发送错误详情:', error);
-      result.textContent = `发送失败: ${error.message}`;
-      if (error.response) {
-        result.textContent += `\n详细信息: ${JSON.stringify(error.response)}`;
-      }
-      result.className = 'result error';
-    } finally {
+      
       sendButton.disabled = false;
       sendButton.classList.remove('btn-loading');
       resultContainer.classList.remove('hidden');
-    }
+    });
+    
+    // 请求错误
+    xhr.addEventListener('error', function() {
+      result.textContent = '网络错误，请稍后重试';
+      result.className = 'result error';
+      
+      sendButton.disabled = false;
+      sendButton.classList.remove('btn-loading');
+      resultContainer.classList.remove('hidden');
+    });
+    
+    // 发送请求
+    xhr.open('POST', '/send-email', true);
+    xhr.send(formData);
   });
 
   // 关闭结果提示
