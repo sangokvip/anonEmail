@@ -390,7 +390,16 @@
           <% if (emails && emails.length > 0) { %>
             <% emails.forEach(email => { %>
               <tr>
-                <td><%= new Date(email.sent_at).toLocaleString('zh-CN') %></td>
+                <td><%= new Date(email.sent_at).toLocaleString('zh-CN', {
+                  timeZone: 'Asia/Shanghai',
+                  year: 'numeric',
+                  month: '2-digit',
+                  day: '2-digit',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  second: '2-digit',
+                  hour12: false
+                }) %></td>
                 <td><%= email.from_email %></td>
                 <td><%= email.to_email %></td>
                 <td class="content-cell"><%= email.subject %></td>
