@@ -171,12 +171,18 @@ input[type="file"] {
 
 .file-item {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
   padding: 0.75rem 1rem;
   background-color: var(--accent-color);
   border-radius: var(--border-radius);
   font-size: 0.875rem;
+}
+
+.file-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
 }
 
 .file-item button {
@@ -194,6 +200,30 @@ input[type="file"] {
 .file-item button:hover {
   color: var(--destructive-hover);
   transform: scale(1.1);
+}
+
+/* 添加进度条样式 */
+.progress-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.progress-bar {
+  height: 0.5rem;
+  background-color: var(--primary-color);
+  border-radius: 0.25rem;
+  transition: width 0.2s ease;
+  width: 0%;
+}
+
+.progress-text {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--primary-color);
+  font-weight: 500;
+  text-align: right;
 }
 
 .form-actions {
@@ -255,35 +285,40 @@ button[type="submit"]:hover {
 }
 
 #closeResultBtn:hover {
-  background-color: #e67300;
+  background-color: #e05e00;
 }
 
 footer {
   text-align: center;
   color: #666;
   font-size: 0.875rem;
+  margin-top: 2rem;
 }
 
 .random-btn {
-  background-color: var(--secondary-color);
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  background-color: var(--accent-color);
+  border: 1px solid var(--border-color);
   border-radius: 4px;
+  color: var(--accent-foreground);
   cursor: pointer;
   transition: var(--transition);
-  white-space: nowrap;
 }
 
 .random-btn:hover {
-  background-color: #e67300;
+  background-color: var(--accent-color);
+  border-color: var(--primary-color);
 }
 
 .input-with-button,
 .textarea-with-button {
   display: flex;
-  gap: 0.5rem;
   align-items: flex-start;
+  gap: 0.5rem;
 }
 
 .input-with-button input,
@@ -295,56 +330,51 @@ footer {
   .container {
     padding: 1rem;
   }
-  
+
   main {
     padding: 1.5rem;
   }
-  
+
   .email-input-container,
   .input-with-button,
   .textarea-with-button {
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.75rem;
   }
-  
+
   .random-btn {
     width: 100%;
   }
-  
+
   .email-input-container input,
   .email-input-container select,
-  .at-symbol {
+  .input-with-button input,
+  .textarea-with-button textarea {
     width: 100%;
-    border-radius: 4px;
-    border: 1px solid var(--border-color);
-    margin-bottom: 0.5rem;
   }
-  
+
   .at-symbol {
-    line-height: 1;
-    padding: 0.75rem;
-    text-align: center;
+    display: none;
   }
 }
 
-/* 现代化按钮样式 */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  white-space: nowrap;
   border-radius: var(--border-radius);
-  font-size: 0.875rem;
   font-weight: 500;
-  height: 2.5rem;
-  padding: 0 1rem;
   transition: var(--transition-all);
-  position: relative;
-  overflow: hidden;
-  gap: 0.5rem;
   cursor: pointer;
-  border: none;
-  outline: none;
+  font-size: 0.875rem;
+  height: 2.5rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  background-color: var(--background-color);
+  color: var(--accent-foreground);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  position: relative;
 }
 
 .btn:focus-visible {
@@ -353,34 +383,38 @@ footer {
 }
 
 .btn:disabled {
+  cursor: not-allowed;
   opacity: 0.5;
-  pointer-events: none;
 }
 
-/* 按钮尺寸变体 */
 .btn-sm {
   height: 2.25rem;
-  padding: 0 0.75rem;
-  font-size: 0.8125rem;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  font-size: 0.75rem;
 }
 
 .btn-lg {
-  height: 2.75rem;
-  padding: 0 2rem;
-  font-size: 0.9375rem;
+  height: 3rem;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+  font-size: 1rem;
 }
 
 .btn-icon {
   height: 2.5rem;
   width: 2.5rem;
   padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* 按钮类型变体 */
 .btn-primary {
   background-color: var(--primary-color);
   color: white;
   box-shadow: var(--shadow-md);
+  border: none;
 }
 
 .btn-primary:hover {
@@ -390,65 +424,69 @@ footer {
 }
 
 .btn-primary:active {
-  transform: translateY(1px);
-  box-shadow: var(--shadow-sm);
+  background-color: var(--primary-hover);
+  transform: translateY(0);
 }
 
 .btn-secondary {
   background-color: var(--secondary-color);
   color: white;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-md);
+  border: none;
 }
 
 .btn-secondary:hover {
   background-color: var(--secondary-hover);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-lg);
   transform: translateY(-1px);
 }
 
 .btn-secondary:active {
-  transform: translateY(1px);
-  box-shadow: var(--shadow-sm);
+  background-color: var(--secondary-hover);
+  transform: translateY(0);
 }
 
 .btn-destructive {
   background-color: var(--destructive-color);
   color: white;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-md);
+  border: none;
 }
 
 .btn-destructive:hover {
   background-color: var(--destructive-hover);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-lg);
   transform: translateY(-1px);
 }
 
 .btn-destructive:active {
-  transform: translateY(1px);
-  box-shadow: var(--shadow-sm);
+  background-color: var(--destructive-hover);
+  transform: translateY(0);
 }
 
 .btn-outline {
   background-color: transparent;
   border: 1px solid var(--border-color);
-  color: var(--accent-foreground);
-  box-shadow: var(--shadow-sm);
+  color: var(--text-color);
+  box-shadow: none;
 }
 
 .btn-outline:hover {
   background-color: var(--accent-color);
-  box-shadow: var(--shadow-md);
+  border-color: var(--primary-color);
+  box-shadow: var(--shadow-sm);
   transform: translateY(-1px);
 }
 
 .btn-outline:active {
-  transform: translateY(1px);
-  box-shadow: var(--shadow-sm);
+  background-color: var(--accent-color);
+  transform: translateY(0);
 }
 
 .btn-ghost {
   background-color: transparent;
-  color: var(--accent-foreground);
+  border: none;
+  box-shadow: none;
 }
 
 .btn-ghost:hover {
@@ -457,35 +495,36 @@ footer {
 
 .btn-link {
   background-color: transparent;
+  border: none;
+  box-shadow: none;
   color: var(--primary-color);
-  text-decoration: none;
-  height: auto;
-  padding: 0;
+  text-decoration: underline;
+  padding-left: 0;
+  padding-right: 0;
 }
 
 .btn-link:hover {
-  text-decoration: underline;
-  text-underline-offset: 4px;
+  text-decoration: none;
+  background-color: transparent;
+  color: var(--primary-hover);
 }
 
-/* 按钮加载状态 */
 .btn-loading {
   position: relative;
-  color: transparent;
+  pointer-events: none;
 }
 
 .btn-loading::after {
   content: '';
   position: absolute;
-  top: 50%;
-  left: 50%;
   width: 1rem;
   height: 1rem;
-  margin: -0.5rem 0 0 -0.5rem;
-  border: 2px solid currentColor;
-  border-right-color: transparent;
-  border-radius: 50%;
-  animation: btn-spinner 0.75s linear infinite;
+  top: calc(50% - 0.5rem);
+  left: calc(50% - 0.5rem);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  border-top-color: currentColor;
+  animation: btn-spinner 0.6s linear infinite;
 }
 
 @keyframes btn-spinner {
@@ -494,7 +533,6 @@ footer {
   }
 }
 
-/* 带图标的按钮 */
 .btn-with-icon {
   display: inline-flex;
   align-items: center;
