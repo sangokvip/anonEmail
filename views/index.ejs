@@ -23,26 +23,22 @@
     <main>
       <form id="emailForm" enctype="multipart/form-data">
         <div class="form-group">
-          <label for="from">发件人邮箱 (最多5个)</label>
-          <div id="senders-container">
-            <div class="sender-item">
-              <input type="text" class="sender-prefix" placeholder="前缀" required>
-              <span class="at-symbol">@</span>
-              <select class="sender-domain" required>
-                <% domains.forEach(domain => { %>
-                  <option value="<%= domain %>"><%= domain %></option>
-                <% }); %>
-              </select>
-              <button type="button" class="btn btn-secondary btn-sm random-sender-prefix">随机生成</button>
-            </div>
+          <label for="from">发件人邮箱</label>
+          <div class="email-input-container">
+            <input type="text" id="prefix" name="prefix" placeholder="前缀" required>
+            <button type="button" id="randomPrefix" class="btn btn-secondary btn-sm">随机生成</button>
+            <span class="at-symbol">@</span>
+            <select id="domain" name="domain" required>
+              <% domains.forEach(domain => { %>
+                <option value="<%= domain %>"><%= domain %></option>
+              <% }); %>
+            </select>
           </div>
-          <button type="button" id="addSender" class="btn btn-outline btn-sm" style="margin-top: 0.5rem;">+ 添加发件人</button>
-          <input type="hidden" id="sendersData" name="senders" required>
         </div>
 
         <div class="form-group">
-          <label for="to">收件人邮箱 (最多10个，用逗号分隔)</label>
-          <textarea id="to" name="to" placeholder="recipient1@example.com, recipient2@example.com" rows="3" required></textarea>
+          <label for="to">收件人邮箱</label>
+          <input type="email" id="to" name="to" placeholder="recipient@example.com" required>
         </div>
 
         <div class="form-group">

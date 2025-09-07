@@ -114,14 +114,12 @@ app.get('/api/emails/:id', async (req, res) => {
 app.post('/send-email', upload.array('attachments', 5), async (req, res) => {
   const uploadedFiles = [];
   try {
-    const { subject, content, to, senders } = req.body;
-    const sendersArray = JSON.parse(senders);
-    
-    if (!Array.isArray(sendersArray) || sendersArray.length === 0 || sendersArray.length > 5) {
-      throw new Error('发件人数量必须在1-5个之间');
-    }
-    
+    const { prefix, domain, subject, content, to } = req.body;
+    const from = `${prefix}@${domain}`;
     const files = req.files || [];
+    
+    // 选择正确的Resend客户端
+    const selectedResend = domain === 'fuckme.store' ? resendFuckme : resend;
     
     // 上传文件到S3
     const attachments = await Promise.all(files.map(async (file) => {
@@ -147,79 +145,23 @@ app.post('/send-email', upload.array('attachments', 5), async (req, res) => {
       }
     }));
 
-    // 处理多个收件人
-    const toEmails = to.split(',').map(email => email.trim()).filter(email => email.length > 0);
-    if (toEmails.length > 10) {
-      throw new Error('收件人数量不能超过10个');
-    }
-    
-    // 为每个发件人发送邮件
-    for (const sender of sendersArray) {
-      const from = `${sender.prefix}@${sender.domain}`;
-      const selectedResend = sender.domain === 'fuckme.store' ? resendFuckme : resend;
-      
-      try {
-        console.log('准备发送邮件:', {
-          from: `${sender.prefix} <${from}>`,
-          to: toEmails,
-          subject,
-          domain: sender.domain,
-          usingFuckmeAPI: sender.domain === 'fuckme.store'
-        });
+    // 发送邮件
+    try {
+      console.log('准备发送邮件:', {
+        from: `${prefix} <${from}>`,
+        to: [to],
+        subject,
+        domain,
+        usingFuckmeAPI: domain === 'fuckme.store'
+      });
 
-        const data = await selectedResend.emails.send({
-          from: `${sender.prefix} <${from}>`,
-          to: toEmails,
-          subject,
-          html: content,
-          attachments: attachments.length > 0 ? attachments : undefined
-        });
-        
-        console.log('邮件发送成功:', data);
-        
-        // 记录到数据库
-        const { error: dbError } = await supabase
-          .from('email_records')
-          .insert([
-            {
-              from_email: from,
-              to_email: toEmails.join(', '),
-              subject,
-              content,
-              attachments: attachments.length > 0 ? attachments.map(a => a.filename) : null,
-              status: 'success',
-              error_message: null
-            }
-          ]);
-
-        if (dbError) {
-          console.error('数据库记录失败:', dbError);
-        }
-      } catch (error) {
-        console.error('发送邮件失败:', error);
-        
-        // 记录失败到数据库
-        const { error: dbError } = await supabase
-          .from('email_records')
-          .insert([
-            {
-              from_email: from,
-              to_email: toEmails.join(', '),
-              subject,
-              content,
-              attachments: null,
-              status: 'failed',
-              error_message: error.message
-            }
-          ]);
-
-        if (dbError) {
-          console.error('数据库记录失败:', dbError);
-        }
-      }
-    }
-    
-    res.status(200).json({ success: true, message: '所有邮件发送完成' });
+      const data = await selectedResend.emails.send({
+        from: `${prefix} <${from}>`,
+        to: [to],
+        subject,
+        html: content,
+        attachments: attachments.length > 0 ? attachments : undefined
+      });
 
       console.log('Resend API 响应:', data);
 
@@ -229,7 +171,7 @@ app.post('/send-email', upload.array('attachments', 5), async (req, res) => {
         .insert([
           {
             from_email: from,
-            to_email: toEmails.join(', '), // 存储为逗号分隔的字符串
+            to_email: to,
             subject,
             content,
             attachments: attachments.length > 0 ? attachments.map(a => a.filename) : null,
@@ -261,7 +203,7 @@ app.post('/send-email', upload.array('attachments', 5), async (req, res) => {
         .insert([
           {
             from_email: from,
-            to_email: toEmails.join(', '), // 存储为逗号分隔的字符串
+            to_email: to,
             subject,
             content,
             attachments: null,
@@ -304,24 +246,6 @@ async function cleanupS3Files(files) {
     console.error('清理S3文件失败:', error);
   }
 }
-
-// 添加定时任务保持数据库活跃
-setInterval(async () => {
-  try {
-    const { data, error } = await supabase
-      .from('email_records')
-      .select('id')
-      .limit(1);
-    
-    if (error) {
-      console.error('保持数据库活跃失败:', error);
-    } else {
-      console.log('数据库活跃保持成功');
-    }
-  } catch (error) {
-    console.error('保持数据库活跃异常:', error);
-  }
-}, 24 * 60 * 60 * 1000); // 每24小时执行一次
 
 // 启动服务器
 app.listen(port, () => {
