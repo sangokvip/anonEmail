@@ -6,9 +6,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const result = document.getElementById('result');
   const closeResultBtn = document.getElementById('closeResultBtn');
   const sendButton = document.getElementById('sendButton');
+  const addSenderBtn = document.getElementById('addSender');
+  const sendersContainer = document.getElementById('senders-container');
+  const sendersDataInput = document.getElementById('sendersData');
 
   // 随机生成功能
-  const randomPrefix = document.getElementById('randomPrefix');
   const randomSubject = document.getElementById('randomSubject');
   const randomContent = document.getElementById('randomContent');
 
@@ -35,6 +37,63 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     return result;
   }
+
+  // 添加发件人
+  function addSender() {
+    if (sendersContainer.children.length >= 5) {
+      alert('最多只能添加5个发件人');
+      return;
+    }
+    
+    const domains = <%= JSON.stringify(domains) %>;
+    const senderItem = document.createElement('div');
+    senderItem.className = 'sender-item';
+    senderItem.style.marginTop = '0.5rem';
+    
+    let domainOptions = '';
+    domains.forEach(domain => {
+      domainOptions += `<option value="${domain}">${domain}</option>`;
+    });
+    
+    senderItem.innerHTML = `
+      <input type="text" class="sender-prefix" placeholder="前缀" required>
+      <span class="at-symbol">@</span>
+      <select class="sender-domain" required>
+        ${domainOptions}
+      </select>
+      <button type="button" class="btn btn-secondary btn-sm random-sender-prefix">随机生成</button>
+      <button type="button" class="btn btn-ghost btn-sm remove-sender">移除</button>
+    `;
+    
+    sendersContainer.appendChild(senderItem);
+    
+    // 为新添加的随机生成按钮添加事件
+    const randomBtn = senderItem.querySelector('.random-sender-prefix');
+    randomBtn.addEventListener('click', function() {
+      const length = Math.floor(Math.random() * 4) + 3;
+      this.previousElementSibling.previousElementSibling.value = generateRandomString(length);
+    });
+    
+    // 为移除按钮添加事件
+    const removeBtn = senderItem.querySelector('.remove-sender');
+    removeBtn.addEventListener('click', function() {
+      if (sendersContainer.children.length > 1) {
+        this.parentElement.remove();
+      } else {
+        alert('至少需要保留一个发件人');
+      }
+    });
+  }
+
+  // 初始化第一个发件人
+  const firstRandomBtn = sendersContainer.querySelector('.random-sender-prefix');
+  firstRandomBtn.addEventListener('click', function() {
+    const length = Math.floor(Math.random() * 4) + 3;
+    this.previousElementSibling.previousElementSibling.value = generateRandomString(length);
+  });
+
+  // 添加发件人按钮事件
+  addSenderBtn.addEventListener('click', addSender);
 
   // 生成随机单词的函数
   function generateRandomWords(count) {
@@ -115,9 +174,26 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // 处理表单提交
+  // 在表单提交前收集发件人数据
   emailForm.addEventListener('submit', function(e) {
     e.preventDefault();
+    
+    // 收集发件人数据
+    const senderItems = sendersContainer.querySelectorAll('.sender-item');
+    const senders = [];
+    
+    for (let item of senderItems) {
+      const prefix = item.querySelector('.sender-prefix').value;
+      const domain = item.querySelector('.sender-domain').value;
+      if (!prefix || !domain) {
+        alert('请填写所有发件人信息');
+        return;
+      }
+      senders.push({ prefix, domain });
+    }
+    
+    sendersDataInput.value = JSON.stringify(senders);
+    
     sendButton.disabled = true;
     sendButton.classList.add('btn-loading');
 
