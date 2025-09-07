@@ -4,7 +4,7 @@
   "description": "自定义邮件发送系统 - 使用Resend API",
   "main": "app.js",
   "engines": {
-    "node": "18.x"
+    "node": "22.x"
   },
   "scripts": {
     "start": "node app.js",
